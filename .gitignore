@@ -6,6 +6,10 @@ pytest-cache-files-*/
 data/output/pytest-tmp*/
 
 data/output/
+dataset/
 *.pt
 yolo11n.pt
+.env
 
+
+.env
