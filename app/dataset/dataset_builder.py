@@ -11,19 +11,27 @@ from app.core.config import settings
 
 @dataclass
 class DatasetBuildResult:
+    source_dirs: list[Path]
+    source_images_total: int
+    source_images_by_dir: dict[str, int]
     source_images: int
     raw_images: int
     processed_images: int
     previews: int
+    skipped_duplicates: int
     warnings: list[str]
     report_path: Path
 
     def to_dict(self) -> dict:
         return {
+            "source_dirs": [str(path) for path in self.source_dirs],
+            "source_images_total": self.source_images_total,
+            "source_images_by_dir": self.source_images_by_dir,
             "source_images": self.source_images,
             "raw_images": self.raw_images,
             "processed_images": self.processed_images,
             "previews": self.previews,
+            "skipped_duplicates": self.skipped_duplicates,
             "warnings": self.warnings,
             "report_path": str(self.report_path),
         }
@@ -34,15 +42,22 @@ class DatasetBuilder:
 
     def __init__(
         self,
-        source_images_dir: Path = settings.images_dir,
+        source_images_dir: Path | None = None,
+        source_dirs: list[Path] | tuple[Path, ...] | None = None,
         raw_dir: Path = settings.dataset_raw_dir,
         processed_dir: Path = settings.dataset_processed_dir,
         previews_dir: Path = settings.dataset_previews_dir,
         exports_dir: Path = settings.dataset_exports_dir,
         image_size: int = settings.dataset_image_size,
-        supported_extensions: tuple[str, ...] = settings.supported_image_extensions,
+        supported_extensions: tuple[str, ...] = (".jpg", ".jpeg", ".png"),
     ) -> None:
-        self.source_images_dir = Path(source_images_dir)
+        if source_dirs is not None:
+            self.source_dirs = [Path(path) for path in source_dirs]
+        elif source_images_dir is not None:
+            self.source_dirs = [Path(source_images_dir)]
+        else:
+            self.source_dirs = [Path(path) for path in settings.dataset_source_dirs]
+
         self.raw_dir = Path(raw_dir)
         self.processed_dir = Path(processed_dir)
         self.previews_dir = Path(previews_dir)
@@ -57,11 +72,13 @@ class DatasetBuilder:
 
         warnings: list[str] = []
         source_images = self._find_source_images()
+        unique_source_images, skipped_duplicates, duplicate_warnings = self._deduplicate_source_images(source_images)
+        warnings.extend(duplicate_warnings)
         raw_paths: list[Path] = []
         processed_paths: list[Path] = []
         preview_paths: list[Path] = []
 
-        for source_path in source_images:
+        for source_path in unique_source_images:
             unique_name = self._unique_name(source_path)
             raw_path = self.raw_dir / unique_name
             processed_path = self.processed_dir / unique_name
@@ -84,25 +101,82 @@ class DatasetBuilder:
             else:
                 preview_paths.append(preview_path)
 
-        report_path = self._write_build_report(source_images, raw_paths, processed_paths, preview_paths, warnings)
+        source_images_by_dir = self._count_images_by_dir(source_images)
+        report_path = self._write_build_report(
+            source_images=source_images,
+            raw_paths=raw_paths,
+            processed_paths=processed_paths,
+            preview_paths=preview_paths,
+            skipped_duplicates=skipped_duplicates,
+            source_images_by_dir=source_images_by_dir,
+            warnings=warnings,
+        )
         return DatasetBuildResult(
+            source_dirs=self.source_dirs,
+            source_images_total=len(source_images),
+            source_images_by_dir=source_images_by_dir,
             source_images=len(source_images),
             raw_images=len(raw_paths),
             processed_images=len(processed_paths),
             previews=len(preview_paths),
+            skipped_duplicates=skipped_duplicates,
             warnings=warnings,
             report_path=report_path,
         )
 
     def _find_source_images(self) -> list[Path]:
-        if not self.source_images_dir.exists():
-            return []
+        images: list[Path] = []
+        for source_dir in self.source_dirs:
+            if not source_dir.exists():
+                continue
 
-        return sorted(
-            path
-            for path in self.source_images_dir.iterdir()
-            if path.is_file() and path.suffix.lower() in self.supported_extensions
-        )
+            images.extend(
+                path
+                for path in source_dir.iterdir()
+                if path.is_file() and path.suffix.lower() in self.supported_extensions
+            )
+
+        return sorted(images)
+
+    def _deduplicate_source_images(self, source_images: list[Path]) -> tuple[list[Path], int, list[str]]:
+        unique_images: list[Path] = []
+        seen_names: set[str] = set()
+        seen_hashes: set[str] = set()
+        warnings: list[str] = []
+        skipped = 0
+
+        for source_path in source_images:
+            normalized_name = source_path.name.lower()
+            if normalized_name in seen_names:
+                skipped += 1
+                warnings.append(f"Skipped duplicate image name: {source_path}")
+                continue
+
+            content_hash = self._file_hash(source_path)
+            if content_hash in seen_hashes:
+                skipped += 1
+                warnings.append(f"Skipped duplicate image content: {source_path}")
+                continue
+
+            seen_names.add(normalized_name)
+            seen_hashes.add(content_hash)
+            unique_images.append(source_path)
+
+        return unique_images, skipped, warnings
+
+    def _file_hash(self, path: Path) -> str:
+        digest = hashlib.sha256()
+        with path.open("rb") as file:
+            for chunk in iter(lambda: file.read(1024 * 1024), b""):
+                digest.update(chunk)
+        return digest.hexdigest()
+
+    def _count_images_by_dir(self, source_images: list[Path]) -> dict[str, int]:
+        counts = {str(path): 0 for path in self.source_dirs}
+        for image_path in source_images:
+            source_dir = str(image_path.parent)
+            counts[source_dir] = counts.get(source_dir, 0) + 1
+        return counts
 
     def _unique_name(self, source_path: Path) -> str:
         safe_stem = re.sub(r"[^a-zA-Z0-9_-]+", "_", source_path.stem).strip("_") or "image"
@@ -138,15 +212,21 @@ class DatasetBuilder:
         raw_paths: list[Path],
         processed_paths: list[Path],
         preview_paths: list[Path],
+        skipped_duplicates: int,
+        source_images_by_dir: dict[str, int],
         warnings: list[str],
     ) -> Path:
         report_path = self.exports_dir / "build_report.json"
         report_path.parent.mkdir(parents=True, exist_ok=True)
         report = {
+            "source_dirs": [str(path) for path in self.source_dirs],
+            "source_images_total": len(source_images),
+            "source_images_by_dir": source_images_by_dir,
             "source_images": [str(path) for path in source_images],
             "raw_images": [str(path) for path in raw_paths],
             "processed_images": [str(path) for path in processed_paths],
             "previews": [str(path) for path in preview_paths],
+            "skipped_duplicates": skipped_duplicates,
             "warnings": warnings,
         }
         report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -155,7 +235,12 @@ class DatasetBuilder:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Prepare local images for YOLO annotation.")
-    parser.add_argument("--source-images-dir", default=str(settings.images_dir))
+    parser.add_argument(
+        "--source-images-dir",
+        action="append",
+        dest="source_images_dirs",
+        help="Source image folder. Can be passed multiple times. Defaults to dataset.source_dirs.",
+    )
     parser.add_argument("--raw-dir", default=str(settings.dataset_raw_dir))
     parser.add_argument("--processed-dir", default=str(settings.dataset_processed_dir))
     parser.add_argument("--previews-dir", default=str(settings.dataset_previews_dir))
@@ -163,7 +248,7 @@ def main() -> None:
     args = parser.parse_args()
 
     result = DatasetBuilder(
-        source_images_dir=Path(args.source_images_dir),
+        source_dirs=[Path(path) for path in args.source_images_dirs] if args.source_images_dirs else None,
         raw_dir=Path(args.raw_dir),
         processed_dir=Path(args.processed_dir),
         previews_dir=Path(args.previews_dir),

@@ -1,15 +1,16 @@
 from pathlib import Path
 
+from app.dataset.dataset_builder import DatasetBuilder
 from app.dataset.dataset_splitter import DatasetSplitter
 from app.dataset.dataset_validator import DatasetValidator
 from app.dataset.yolo_exporter import YoloExporter, parse_yolo_label_line
 
 
-def _write_image(path: Path) -> None:
+def _write_image(path: Path, color: str = "#f5f7fb") -> None:
     from PIL import Image
 
     path.parent.mkdir(parents=True, exist_ok=True)
-    Image.new("RGB", (64, 64), "#f5f7fb").save(path)
+    Image.new("RGB", (64, 64), color).save(path)
 
 
 def _write_label(path: Path, line: str = "0 0.500000 0.500000 0.250000 0.250000") -> None:
@@ -39,6 +40,29 @@ def test_dataset_split_uses_configured_ratios(tmp_path) -> None:
     assert result.val == 2
     assert result.test == 1
     assert len(list((dataset_dir / "labels" / "train").glob("*.txt"))) == 7
+
+
+def test_dataset_builder_reads_multiple_source_dirs(tmp_path) -> None:
+    data_images = tmp_path / "data" / "images"
+    mapillary = tmp_path / "dataset" / "raw" / "mapillary"
+    kartaview = tmp_path / "dataset" / "raw" / "kartaview"
+    _write_image(data_images / "local.png", "#ff0000")
+    _write_image(mapillary / "mapillary.jpg", "#00ff00")
+    _write_image(kartaview / "kartaview.jpeg", "#0000ff")
+
+    result = DatasetBuilder(
+        source_dirs=[data_images, mapillary, kartaview],
+        raw_dir=tmp_path / "dataset" / "raw",
+        processed_dir=tmp_path / "dataset" / "processed",
+        previews_dir=tmp_path / "dataset" / "previews",
+        exports_dir=tmp_path / "dataset" / "exports",
+    ).build()
+
+    assert result.source_images_total == 3
+    assert result.processed_images == 3
+    assert result.skipped_duplicates == 0
+    assert result.source_images_by_dir[str(mapillary)] == 1
+    assert result.report_path.exists()
 
 
 def test_dataset_yaml_generation(tmp_path) -> None:

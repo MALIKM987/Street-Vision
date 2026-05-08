@@ -114,6 +114,13 @@ dataset_config = config_values.get("dataset", {})
 if not isinstance(dataset_config, dict):
     dataset_config = {}
 
+dataset_source_dirs_config = dataset_config.get(
+    "source_dirs",
+    ["data/images", "dataset/raw/mapillary", "dataset/raw/kartaview"],
+)
+if not isinstance(dataset_source_dirs_config, list):
+    dataset_source_dirs_config = ["data/images"]
+
 data_sources_config = config_values.get("data_sources", {})
 if not isinstance(data_sources_config, dict):
     data_sources_config = {}
@@ -138,6 +145,7 @@ class Settings:
     output_dir: Path = _resolve_path(os.getenv("OUTPUT_DIR", config_values.get("output_dir", "data/output")))
     models_dir: Path = BASE_DIR / "models"
     dataset_dir: Path = BASE_DIR / "dataset"
+    dataset_source_dirs: tuple[Path, ...] = tuple(_resolve_path(path) for path in dataset_source_dirs_config)
     dataset_raw_dir: Path = _resolve_path(os.getenv("DATASET_RAW_DIR", dataset_config.get("raw_dir", "dataset/raw")))
     dataset_processed_dir: Path = _resolve_path(
         os.getenv("DATASET_PROCESSED_DIR", dataset_config.get("processed_dir", "dataset/processed"))

@@ -1,23 +1,72 @@
 {
+  "source_dirs": [
+    "C:\\Projekty-MM\\Street Vision\\data\\images",
+    "C:\\Projekty-MM\\Street Vision\\dataset\\raw\\mapillary",
+    "C:\\Projekty-MM\\Street Vision\\dataset\\raw\\kartaview"
+  ],
+  "source_images_total": 13,
+  "source_images_by_dir": {
+    "C:\\Projekty-MM\\Street Vision\\data\\images": 3,
+    "C:\\Projekty-MM\\Street Vision\\dataset\\raw\\mapillary": 10,
+    "C:\\Projekty-MM\\Street Vision\\dataset\\raw\\kartaview": 0
+  },
   "source_images": [
     "C:\\Projekty-MM\\Street Vision\\data\\images\\sample_pole_001.png",
     "C:\\Projekty-MM\\Street Vision\\data\\images\\sample_pole_002.png",
-    "C:\\Projekty-MM\\Street Vision\\data\\images\\sample_pole_003.png"
+    "C:\\Projekty-MM\\Street Vision\\data\\images\\sample_pole_003.png",
+    "C:\\Projekty-MM\\Street Vision\\dataset\\raw\\mapillary\\mapillary_1058172551497085.jpg",
+    "C:\\Projekty-MM\\Street Vision\\dataset\\raw\\mapillary\\mapillary_109398701983743.jpg",
+    "C:\\Projekty-MM\\Street Vision\\dataset\\raw\\mapillary\\mapillary_115307781218622.jpg",
+    "C:\\Projekty-MM\\Street Vision\\dataset\\raw\\mapillary\\mapillary_119422690837475.jpg",
+    "C:\\Projekty-MM\\Street Vision\\dataset\\raw\\mapillary\\mapillary_1205593396681964.jpg",
+    "C:\\Projekty-MM\\Street Vision\\dataset\\raw\\mapillary\\mapillary_1225737561213755.jpg",
+    "C:\\Projekty-MM\\Street Vision\\dataset\\raw\\mapillary\\mapillary_1335146357021308.jpg",
+    "C:\\Projekty-MM\\Street Vision\\dataset\\raw\\mapillary\\mapillary_148429791263393.jpg",
+    "C:\\Projekty-MM\\Street Vision\\dataset\\raw\\mapillary\\mapillary_2126032834251011.jpg",
+    "C:\\Projekty-MM\\Street Vision\\dataset\\raw\\mapillary\\mapillary_297332232591395.jpg"
   ],
   "raw_images": [
     "C:\\Projekty-MM\\Street Vision\\dataset\\raw\\sample_pole_001_abaecfb556.png",
-    "C:\\Projekty-MM\\Street Vision\\dataset\\raw\\sample_pole_002_13a6914c84.png",
-    "C:\\Projekty-MM\\Street Vision\\dataset\\raw\\sample_pole_003_5139cf2225.png"
+    "C:\\Projekty-MM\\Street Vision\\dataset\\raw\\mapillary_1058172551497085_7858435246.jpg",
+    "C:\\Projekty-MM\\Street Vision\\dataset\\raw\\mapillary_109398701983743_b3c7e6a7d1.jpg",
+    "C:\\Projekty-MM\\Street Vision\\dataset\\raw\\mapillary_115307781218622_ec207c0c76.jpg",
+    "C:\\Projekty-MM\\Street Vision\\dataset\\raw\\mapillary_119422690837475_8590132062.jpg",
+    "C:\\Projekty-MM\\Street Vision\\dataset\\raw\\mapillary_1205593396681964_13daf3d305.jpg",
+    "C:\\Projekty-MM\\Street Vision\\dataset\\raw\\mapillary_1225737561213755_1a2355967c.jpg",
+    "C:\\Projekty-MM\\Street Vision\\dataset\\raw\\mapillary_1335146357021308_50c5a78a7d.jpg",
+    "C:\\Projekty-MM\\Street Vision\\dataset\\raw\\mapillary_148429791263393_e009701e55.jpg",
+    "C:\\Projekty-MM\\Street Vision\\dataset\\raw\\mapillary_2126032834251011_86c373ac7f.jpg",
+    "C:\\Projekty-MM\\Street Vision\\dataset\\raw\\mapillary_297332232591395_de6eb6cd3a.jpg"
   ],
   "processed_images": [
     "C:\\Projekty-MM\\Street Vision\\dataset\\processed\\sample_pole_001_abaecfb556.png",
-    "C:\\Projekty-MM\\Street Vision\\dataset\\processed\\sample_pole_002_13a6914c84.png",
-    "C:\\Projekty-MM\\Street Vision\\dataset\\processed\\sample_pole_003_5139cf2225.png"
+    "C:\\Projekty-MM\\Street Vision\\dataset\\processed\\mapillary_1058172551497085_7858435246.jpg",
+    "C:\\Projekty-MM\\Street Vision\\dataset\\processed\\mapillary_109398701983743_b3c7e6a7d1.jpg",
+    "C:\\Projekty-MM\\Street Vision\\dataset\\processed\\mapillary_115307781218622_ec207c0c76.jpg",
+    "C:\\Projekty-MM\\Street Vision\\dataset\\processed\\mapillary_119422690837475_8590132062.jpg",
+    "C:\\Projekty-MM\\Street Vision\\dataset\\processed\\mapillary_1205593396681964_13daf3d305.jpg",
+    "C:\\Projekty-MM\\Street Vision\\dataset\\processed\\mapillary_1225737561213755_1a2355967c.jpg",
+    "C:\\Projekty-MM\\Street Vision\\dataset\\processed\\mapillary_1335146357021308_50c5a78a7d.jpg",
+    "C:\\Projekty-MM\\Street Vision\\dataset\\processed\\mapillary_148429791263393_e009701e55.jpg",
+    "C:\\Projekty-MM\\Street Vision\\dataset\\processed\\mapillary_2126032834251011_86c373ac7f.jpg",
+    "C:\\Projekty-MM\\Street Vision\\dataset\\processed\\mapillary_297332232591395_de6eb6cd3a.jpg"
   ],
   "previews": [
     "C:\\Projekty-MM\\Street Vision\\dataset\\previews\\sample_pole_001_abaecfb556_preview.jpg",
-    "C:\\Projekty-MM\\Street Vision\\dataset\\previews\\sample_pole_002_13a6914c84_preview.jpg",
-    "C:\\Projekty-MM\\Street Vision\\dataset\\previews\\sample_pole_003_5139cf2225_preview.jpg"
+    "C:\\Projekty-MM\\Street Vision\\dataset\\previews\\mapillary_1058172551497085_7858435246_preview.jpg",
+    "C:\\Projekty-MM\\Street Vision\\dataset\\previews\\mapillary_109398701983743_b3c7e6a7d1_preview.jpg",
+    "C:\\Projekty-MM\\Street Vision\\dataset\\previews\\mapillary_115307781218622_ec207c0c76_preview.jpg",
+    "C:\\Projekty-MM\\Street Vision\\dataset\\previews\\mapillary_119422690837475_8590132062_preview.jpg",
+    "C:\\Projekty-MM\\Street Vision\\dataset\\previews\\mapillary_1205593396681964_13daf3d305_preview.jpg",
+    "C:\\Projekty-MM\\Street Vision\\dataset\\previews\\mapillary_1225737561213755_1a2355967c_preview.jpg",
+    "C:\\Projekty-MM\\Street Vision\\dataset\\previews\\mapillary_1335146357021308_50c5a78a7d_preview.jpg",
+    "C:\\Projekty-MM\\Street Vision\\dataset\\previews\\mapillary_148429791263393_e009701e55_preview.jpg",
+    "C:\\Projekty-MM\\Street Vision\\dataset\\previews\\mapillary_2126032834251011_86c373ac7f_preview.jpg",
+    "C:\\Projekty-MM\\Street Vision\\dataset\\previews\\mapillary_297332232591395_de6eb6cd3a_preview.jpg"
   ],
-  "warnings": []
+  "skipped_duplicates": 2,
+  "warnings": [
+    "Skipped duplicate image content: C:\\Projekty-MM\\Street Vision\\data\\images\\sample_pole_002.png",
+    "Skipped duplicate image content: C:\\Projekty-MM\\Street Vision\\data\\images\\sample_pole_003.png"
+  ]
 }

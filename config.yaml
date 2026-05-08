@@ -24,6 +24,10 @@ yolo_allowed_classes:
   - fiber_cable
 
 dataset:
+  source_dirs:
+    - data/images
+    - dataset/raw/mapillary
+    - dataset/raw/kartaview
   raw_dir: dataset/raw
   processed_dir: dataset/processed
   train_ratio: 0.7

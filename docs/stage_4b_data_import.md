@@ -92,7 +92,32 @@ Jesli API nie zwroci danych albo wystapi blad, program zapisze ostrzezenie i zak
 Po imporcie Mapillary mozesz przygotowac obrazy dla LabelImg/CVAT:
 
 ```powershell
+python -m app.dataset.dataset_builder
+```
+
+`DatasetBuilder` czyta domyslnie foldery z `dataset.source_dirs`:
+
+```yaml
+dataset:
+  source_dirs:
+    - data/images
+    - dataset/raw/mapillary
+    - dataset/raw/kartaview
+```
+
+Builder pomija duplikaty nazw oraz identyczne pliki. Raport zapisuje w:
+
+```text
+dataset/exports/build_report.json
+```
+
+Raport zawiera `source_dirs`, `source_images_total`, `source_images_by_dir`, `processed_images`, `skipped_duplicates` oraz `warnings`.
+
+Mozesz tez wskazac zrodla recznie:
+
+```powershell
 python -m app.dataset.dataset_builder --source-images-dir dataset/raw/mapillary
+python -m app.dataset.dataset_builder --source-images-dir dataset/raw/mapillary --source-images-dir dataset/raw/kartaview
 ```
 
 Nastepnie oznaczaj dane w:

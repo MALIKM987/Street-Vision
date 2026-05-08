@@ -220,7 +220,7 @@ python -m app.data_sources.kartaview_client
 Po imporcie przygotuj obrazy do anotacji:
 
 ```powershell
-python -m app.dataset.dataset_builder --source-images-dir dataset/raw/mapillary
+python -m app.dataset.dataset_builder
 ```
 
 Wyniki importu:
@@ -231,6 +231,19 @@ Wyniki importu:
 - `dataset/imports/kartaview_import.csv`
 
 Szczegoly: [docs/stage_4b_data_import.md](docs/stage_4b_data_import.md).
+
+`DatasetBuilder` domyslnie czyta foldery z `dataset.source_dirs`:
+
+- `data/images`
+- `dataset/raw/mapillary`
+- `dataset/raw/kartaview`
+
+Mozesz tez wskazac zrodla recznie:
+
+```powershell
+python -m app.dataset.dataset_builder --source-images-dir dataset/raw/mapillary
+python -m app.dataset.dataset_builder --source-images-dir dataset/raw/mapillary --source-images-dir dataset/raw/kartaview
+```
 
 ## Tryb mock
 
@@ -260,6 +273,10 @@ yolo_allowed_classes:
   - overhead_wire
   - fiber_cable
 dataset:
+  source_dirs:
+    - data/images
+    - dataset/raw/mapillary
+    - dataset/raw/kartaview
   raw_dir: dataset/raw
   processed_dir: dataset/processed
   train_ratio: 0.7
@@ -375,6 +392,7 @@ Opis pol:
 - `yolo_fallback_model` - testowy model awaryjny, domyslnie `yolo11n.pt`.
 - `yolo_allowed_classes` - klasy akceptowane dla wlasnego modelu slupow.
 - `dataset.raw_dir` - kopie oryginalnych obrazow.
+- `dataset.source_dirs` - foldery zrodlowe czytane przez `DatasetBuilder`.
 - `dataset.processed_dir` - obrazy przygotowane do anotacji.
 - `dataset.train_ratio`, `dataset.val_ratio`, `dataset.test_ratio` - podzial datasetu.
 - `dataset.image_size` - maksymalny rozmiar boku obrazu w `processed`.
