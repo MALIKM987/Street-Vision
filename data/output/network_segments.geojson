@@ -1,0 +1,49 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            21.01223,
+            52.229675
+          ],
+          [
+            21.01272,
+            52.23002
+          ]
+        ]
+      },
+      "properties": {
+        "pole_a_id": "P0001",
+        "pole_b_id": "P0002",
+        "distance_m": 50.85,
+        "status": "ok"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            21.01272,
+            52.23002
+          ],
+          [
+            21.01305,
+            52.2305
+          ]
+        ]
+      },
+      "properties": {
+        "pole_a_id": "P0002",
+        "pole_b_id": "P0003",
+        "distance_m": 57.91,
+        "status": "ok"
+      }
+    }
+  ]
+}

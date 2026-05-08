@@ -1,0 +1,4 @@
+id,lat,lon,source_image,pole_type,has_lamp,has_telecom_box,has_cable_loop,has_support,pole_number,confidence,status
+P0001,52.229675,21.01223,sample_pole_001.png,pole,False,False,True,False,SV-001,0.86,auto_detected
+P0002,52.23002,21.01272,sample_pole_002.png,pole,False,False,False,False,,0.87,auto_detected
+P0003,52.2305,21.01305,sample_pole_003.png,pole,True,True,False,True,SV-003,0.79,needs_review

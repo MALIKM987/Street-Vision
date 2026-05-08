@@ -1,0 +1,4 @@
+image_name,lat,lon,captured_at,notes
+sample_pole_001.png,52.229675,21.012230,2026-05-01T10:00:00,Przykladowy slup przy ulicy
+sample_pole_002.png,52.230020,21.012720,2026-05-01T10:02:00,Przykladowy slup z osprzetem
+sample_pole_003.png,52.230500,21.013050,2026-05-01T10:04:00,Przykladowy slup do weryfikacji

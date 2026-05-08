@@ -1,0 +1,77 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          21.01223,
+          52.229675
+        ]
+      },
+      "properties": {
+        "id": "P0001",
+        "lat": 52.229675,
+        "lon": 21.01223,
+        "source_image": "sample_pole_001.png",
+        "pole_type": "pole",
+        "has_lamp": false,
+        "has_telecom_box": false,
+        "has_cable_loop": true,
+        "has_support": false,
+        "pole_number": "SV-001",
+        "confidence": 0.86,
+        "status": "auto_detected"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          21.01272,
+          52.23002
+        ]
+      },
+      "properties": {
+        "id": "P0002",
+        "lat": 52.23002,
+        "lon": 21.01272,
+        "source_image": "sample_pole_002.png",
+        "pole_type": "pole",
+        "has_lamp": false,
+        "has_telecom_box": false,
+        "has_cable_loop": false,
+        "has_support": false,
+        "pole_number": null,
+        "confidence": 0.87,
+        "status": "auto_detected"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          21.01305,
+          52.2305
+        ]
+      },
+      "properties": {
+        "id": "P0003",
+        "lat": 52.2305,
+        "lon": 21.01305,
+        "source_image": "sample_pole_003.png",
+        "pole_type": "pole",
+        "has_lamp": true,
+        "has_telecom_box": true,
+        "has_cable_loop": false,
+        "has_support": true,
+        "pole_number": "SV-003",
+        "confidence": 0.79,
+        "status": "needs_review"
+      }
+    }
+  ]
+}

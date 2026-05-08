@@ -1,0 +1,7 @@
+detector_mode: mock
+confidence_threshold: 0.5
+max_segment_distance_m: 70
+input_images_dir: data/images
+metadata_path: data/metadata.csv
+output_dir: data/output
+model_path: models/pole_detector.pt
