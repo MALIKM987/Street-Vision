@@ -1,12 +1,19 @@
 import hashlib
 from pathlib import Path
+from typing import Any
 
-from app.core.schemas import DetectionResult, ImageRecord
+from app.core.schemas import DetectionResult, DetectorRunInfo, ImageRecord
 from app.detection.classes import DETECTION_CLASSES
 
 
+GENERIC_COCO_WARNING = (
+    "Fallback YOLO model is generic COCO model and does not detect dedicated power pole classes. "
+    "Use it only to test inference pipeline."
+)
+
+
 class PoleDetector:
-    """Mock detector prepared for a later YOLO implementation."""
+    """Runs mock detections or optional YOLO inference on local images."""
 
     allowed_modes = {"mock", "yolo"}
 
@@ -14,12 +21,20 @@ class PoleDetector:
         self,
         mode: str = "mock",
         model_path: str | Path | None = None,
+        yolo_model_path: str | Path | None = None,
+        yolo_fallback_model: str = "yolo11n.pt",
+        yolo_allowed_classes: list[str] | tuple[str, ...] | None = None,
         confidence_threshold: float = 0.5,
     ) -> None:
         self.requested_mode = mode
-        self.model_path = Path(model_path) if model_path else None
+        self.model_path = Path(yolo_model_path or model_path) if (yolo_model_path or model_path) else None
+        self.yolo_fallback_model = yolo_fallback_model
+        self.yolo_allowed_classes = set(yolo_allowed_classes or DETECTION_CLASSES)
         self.confidence_threshold = confidence_threshold
         self.warnings: list[str] = []
+        self.model: Any | None = None
+        self.model_path_used: str | None = None
+        self.number_of_yolo_detections = 0
         self.mode = self._resolve_mode(mode)
 
     def detect_batch(self, images: list[ImageRecord]) -> list[DetectionResult]:
@@ -40,24 +55,126 @@ class PoleDetector:
             return "mock"
 
         if normalized_mode == "yolo":
-            if self.model_path is None or not self.model_path.exists():
-                self.warnings.append(
-                    f"YOLO model not found at {self.model_path}. Falling back to mock mode."
-                )
-                return "mock"
-
-            # Stage 2 prepares the integration point. Real inference will be added later.
-            self.warnings.append(
-                "YOLO model file exists, but YOLO inference is not implemented yet. Using mock detections."
-            )
-            return "mock"
+            return self._try_load_yolo()
 
         return normalized_mode
 
+    def _try_load_yolo(self) -> str:
+        model_source = self._select_yolo_model_source()
+
+        try:
+            # Keep ultralytics optional: mock mode must work without this package.
+            from ultralytics import YOLO
+        except Exception as exc:  # noqa: BLE001 - optional dependency.
+            self.warnings.append(f"Could not import ultralytics YOLO: {exc}. Falling back to mock mode.")
+            return "mock"
+
+        try:
+            self.model = YOLO(str(model_source))
+            self.model_path_used = str(model_source)
+            return "yolo"
+        except Exception as exc:  # noqa: BLE001 - loading can fail for many local reasons.
+            self.warnings.append(f"Could not load YOLO model '{model_source}': {exc}. Falling back to mock mode.")
+            self.model = None
+            self.model_path_used = None
+            return "mock"
+
+    def _select_yolo_model_source(self) -> str | Path:
+        if self.model_path and self.model_path.exists():
+            return self.model_path
+
+        if self.model_path:
+            self.warnings.append(
+                f"Custom YOLO model not found at {self.model_path}. Trying fallback model {self.yolo_fallback_model}."
+            )
+        else:
+            self.warnings.append(f"No custom YOLO model path configured. Trying fallback model {self.yolo_fallback_model}.")
+
+        self.warnings.append(GENERIC_COCO_WARNING)
+        return self.yolo_fallback_model
+
     def _detect_yolo(self, image: ImageRecord) -> list[DetectionResult]:
-        # Future Stage: load the model from self.model_path and return DetectionResult objects.
-        self.warnings.append(f"YOLO detection requested for {image.image_name}, using mock placeholder.")
-        return self._mock_detect(image)
+        if self.model is None:
+            self.warnings.append(f"YOLO model is unavailable for {image.image_name}. Using mock detections.")
+            return self._mock_detect(image)
+
+        try:
+            results = self.model.predict(
+                source=str(image.image_path),
+                conf=self.confidence_threshold,
+                verbose=False,
+            )
+        except Exception as exc:  # noqa: BLE001 - inference must not stop the local pipeline.
+            self.warnings.append(f"YOLO inference failed for {image.image_name}: {exc}. Using mock detections.")
+            return self._mock_detect(image)
+
+        detections: list[DetectionResult] = []
+        for result in results:
+            names = getattr(result, "names", {}) or {}
+            boxes = getattr(result, "boxes", None)
+            if boxes is None:
+                continue
+
+            for box in boxes:
+                class_id = self._to_int(box.cls)
+                confidence = self._to_float(box.conf)
+                class_name = str(names.get(class_id, class_id))
+
+                if class_name not in self.yolo_allowed_classes and self._using_custom_model():
+                    continue
+                if confidence < self.confidence_threshold:
+                    continue
+
+                x1, y1, x2, y2 = self._extract_xyxy(box)
+                detections.append(
+                    DetectionResult(
+                        image_name=image.image_name,
+                        detected_class=class_name,
+                        confidence=round(confidence, 4),
+                        bbox_x1=x1,
+                        bbox_y1=y1,
+                        bbox_x2=x2,
+                        bbox_y2=y2,
+                        class_id=class_id,
+                        model_path=self.model_path_used,
+                        source="yolo",
+                    )
+                )
+
+        self.number_of_yolo_detections += len(detections)
+        return detections
+
+    def _using_custom_model(self) -> bool:
+        return bool(self.model_path and self.model_path.exists() and self.model_path_used == str(self.model_path))
+
+    def _extract_xyxy(self, box: Any) -> tuple[int, int, int, int]:
+        xyxy = box.xyxy[0]
+        values = xyxy.tolist() if hasattr(xyxy, "tolist") else list(xyxy)
+        return tuple(round(float(value)) for value in values[:4])  # type: ignore[return-value]
+
+    def _to_int(self, value: Any) -> int:
+        if hasattr(value, "item"):
+            return int(value.item())
+        if hasattr(value, "tolist"):
+            listed = value.tolist()
+            if isinstance(listed, list):
+                return int(listed[0])
+            return int(listed)
+        if isinstance(value, list):
+            return int(value[0])
+        return int(value)
+
+    def _to_float(self, value: Any) -> float:
+        if hasattr(value, "item"):
+            return float(value.item())
+        if hasattr(value, "tolist"):
+            listed = value.tolist()
+            if isinstance(listed, list):
+                return float(listed[0])
+            return float(listed)
+        if isinstance(value, list):
+            return float(value[0])
+        return float(value)
 
     def _mock_detect(self, image: ImageRecord) -> list[DetectionResult]:
         seed = self._seed(image.image_name)
@@ -125,3 +242,12 @@ class PoleDetector:
     @property
     def supported_classes(self) -> list[str]:
         return DETECTION_CLASSES
+
+    def get_run_info(self) -> DetectorRunInfo:
+        return DetectorRunInfo(
+            detector_mode_requested=self.requested_mode,
+            detector_mode_used=self.mode,
+            model_path_used=self.model_path_used,
+            number_of_yolo_detections=self.number_of_yolo_detections,
+            warnings=list(dict.fromkeys(self.warnings)),
+        )

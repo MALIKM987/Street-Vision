@@ -3,7 +3,7 @@ from pathlib import Path
 
 from app.core.config import settings
 from app.core.data_importer import MetadataImporter, MetadataValidationError
-from app.core.schemas import AnalysisRunResult, ValidationIssue
+from app.core.schemas import AnalysisRunResult, DetectorRunInfo, ValidationIssue
 from app.detection.annotation import ImageAnnotator
 from app.detection.pole_detector import PoleDetector
 from app.gis.geojson_exporter import GeoJSONExporter
@@ -20,6 +20,9 @@ class AnalysisPipeline:
         self.detector = PoleDetector(
             mode=settings.detector_mode,
             model_path=settings.model_path,
+            yolo_model_path=settings.yolo_model_path,
+            yolo_fallback_model=settings.yolo_fallback_model,
+            yolo_allowed_classes=settings.yolo_allowed_classes,
             confidence_threshold=settings.confidence_threshold,
         )
         self.annotator = ImageAnnotator()
@@ -57,6 +60,7 @@ class AnalysisPipeline:
                 annotated_images=[],
                 metadata_rows=exc.metadata_rows,
                 missing_images_count=exc.missing_images_count,
+                detector_info=self.detector.get_run_info(),
             )
             return AnalysisRunResult(
                 images=[],
@@ -70,12 +74,18 @@ class AnalysisPipeline:
                 metadata_rows=exc.metadata_rows,
                 missing_images_count=exc.missing_images_count,
                 annotated_images=[],
+                detector_info=self.detector.get_run_info(),
             )
 
         validation_errors = detector_warnings + import_result.validation_errors
         self._print_validation(validation_errors)
 
         detections = self.detector.detect_batch(import_result.images)
+        detector_info = self.detector.get_run_info()
+        detector_issues_after_detection = self._detector_warnings_to_issues(detector_info, validation_errors)
+        validation_errors.extend(detector_issues_after_detection)
+        self._print_validation(detector_issues_after_detection)
+
         ocr_results = self.ocr_reader.read_batch(import_result.images, detections)
         poles = self.geojson_exporter.build_poles(import_result.images, detections, ocr_results)
         segments = self.network_analyzer.build_segments(poles, max_distance_m=max_span_m)
@@ -110,6 +120,7 @@ class AnalysisPipeline:
                 annotated_images=annotated_images,
                 metadata_rows=import_result.metadata_rows,
                 missing_images_count=import_result.missing_images_count,
+                detector_info=detector_info,
             )
         )
 
@@ -125,11 +136,24 @@ class AnalysisPipeline:
             metadata_rows=import_result.metadata_rows,
             missing_images_count=import_result.missing_images_count,
             annotated_images=annotated_images,
+            detector_info=detector_info,
         )
 
     def _print_validation(self, validation_errors: list[ValidationIssue]) -> None:
         for issue in validation_errors:
             print(f"[validation] {issue.format()}")
+
+    def _detector_warnings_to_issues(
+        self,
+        detector_info: DetectorRunInfo,
+        existing_issues: list[ValidationIssue],
+    ) -> list[ValidationIssue]:
+        existing_messages = {issue.message for issue in existing_issues}
+        return [
+            ValidationIssue(message=warning, severity="warning")
+            for warning in detector_info.warnings
+            if warning not in existing_messages
+        ]
 
 
 def main() -> None:

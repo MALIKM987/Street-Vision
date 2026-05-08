@@ -2,7 +2,7 @@ import csv
 from html import escape
 from pathlib import Path
 
-from app.core.schemas import DetectionResult, ImageRecord, NetworkSegment, PolePoint, ValidationIssue
+from app.core.schemas import DetectionResult, DetectorRunInfo, ImageRecord, NetworkSegment, PolePoint, ValidationIssue
 
 
 class ReportGenerator:
@@ -17,11 +17,13 @@ class ReportGenerator:
         annotated_images: list[Path] | None = None,
         metadata_rows: int | None = None,
         missing_images_count: int = 0,
+        detector_info: DetectorRunInfo | None = None,
     ) -> dict[str, Path]:
         output_dir.mkdir(parents=True, exist_ok=True)
 
         poles_csv = self.write_poles_csv(poles, output_dir / "poles.csv")
         segments_csv = self.write_segments_csv(segments, output_dir / "network_segments.csv")
+        detections_raw_csv = self.write_detections_raw_csv(detections or [], output_dir / "detections_raw.csv")
         report_html = self.write_html_report(
             images=images,
             poles=poles,
@@ -33,11 +35,13 @@ class ReportGenerator:
             metadata_rows=metadata_rows if metadata_rows is not None else len(images),
             missing_images_count=missing_images_count,
             output_dir=output_dir,
+            detector_info=detector_info,
         )
 
         return {
             "poles_csv": poles_csv,
             "network_segments_csv": segments_csv,
+            "detections_raw_csv": detections_raw_csv,
             "report_html": report_html,
         }
 
@@ -62,6 +66,39 @@ class ReportGenerator:
             writer.writeheader()
             for pole in poles:
                 writer.writerow({field: getattr(pole, field) for field in fieldnames})
+
+        return output_path
+
+    def write_detections_raw_csv(self, detections: list[DetectionResult], output_path: Path) -> Path:
+        fieldnames = [
+            "image_name",
+            "class_id",
+            "class_name",
+            "confidence",
+            "bbox_x1",
+            "bbox_y1",
+            "bbox_x2",
+            "bbox_y2",
+            "model_path",
+        ]
+
+        with output_path.open("w", encoding="utf-8", newline="") as csv_file:
+            writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
+            writer.writeheader()
+            for detection in detections:
+                writer.writerow(
+                    {
+                        "image_name": detection.image_name,
+                        "class_id": "" if detection.class_id is None else detection.class_id,
+                        "class_name": detection.detected_class,
+                        "confidence": detection.confidence,
+                        "bbox_x1": detection.bbox_x1,
+                        "bbox_y1": detection.bbox_y1,
+                        "bbox_x2": detection.bbox_x2,
+                        "bbox_y2": detection.bbox_y2,
+                        "model_path": detection.model_path or "",
+                    }
+                )
 
         return output_path
 
@@ -95,6 +132,7 @@ class ReportGenerator:
         metadata_rows: int | None = None,
         missing_images_count: int = 0,
         output_dir: Path | None = None,
+        detector_info: DetectorRunInfo | None = None,
     ) -> Path:
         detections = detections or []
         validation_errors = validation_errors or []
@@ -106,7 +144,7 @@ class ReportGenerator:
 <html lang="pl">
 <head>
   <meta charset="utf-8">
-  <title>Street Vision - raport Etap 2</title>
+  <title>Street Vision - raport Etap 3</title>
   <style>
     body {{ font-family: Arial, sans-serif; margin: 40px; color: #1f2933; }}
     table {{ border-collapse: collapse; min-width: 420px; }}
@@ -121,7 +159,7 @@ class ReportGenerator:
   </style>
 </head>
 <body>
-  <h1>Street Vision - raport Etap 2</h1>
+  <h1>Street Vision - raport Etap 3</h1>
   <table>
     <tr><th>Metryka</th><th>Wartosc</th></tr>
     <tr><td>Liczba zdjec w metadata.csv</td><td>{metadata_rows}</td></tr>
@@ -134,6 +172,8 @@ class ReportGenerator:
     <tr><td>Liczba slupow wymagajacych weryfikacji</td><td>{sum(1 for pole in poles if pole.status == "needs_review")}</td></tr>
     <tr><td>Laczna dlugosc potencjalnej trasy</td><td>{total_route_length_m} m</td></tr>
   </table>
+  <h2>Detektor</h2>
+  {self._detector_table(detector_info)}
   <h2>Bledy walidacji</h2>
   {self._validation_table(validation_errors)}
   <h2>Obrazy z naniesiona detekcja</h2>
@@ -212,3 +252,20 @@ class ReportGenerator:
             )
 
         return f"<div class=\"thumbs\">{''.join(items)}</div>"
+
+    def _detector_table(self, detector_info: DetectorRunInfo | None) -> str:
+        if detector_info is None:
+            return "<p>Brak informacji o detektorze.</p>"
+
+        warnings = detector_info.warnings or []
+        warnings_html = "<br>".join(escape(warning) for warning in warnings) if warnings else "Brak ostrzezen."
+        return f"""
+<table>
+  <tr><th>Parametr</th><th>Wartosc</th></tr>
+  <tr><td>detector_mode_requested</td><td>{escape(detector_info.detector_mode_requested)}</td></tr>
+  <tr><td>detector_mode_used</td><td>{escape(detector_info.detector_mode_used)}</td></tr>
+  <tr><td>model_path_used</td><td>{escape(detector_info.model_path_used or '')}</td></tr>
+  <tr><td>number_of_yolo_detections</td><td>{detector_info.number_of_yolo_detections}</td></tr>
+  <tr><td>warnings</td><td>{warnings_html}</td></tr>
+</table>
+"""

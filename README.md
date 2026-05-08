@@ -40,6 +40,20 @@ Etap 2 rozbudowuje MVP o:
 
 Tryb `yolo` jest przygotowany jako punkt integracji. Trenowanie i prawdziwa inferencja YOLO nie sa jeszcze implementowane.
 
+## Etap 3
+
+Etap 3 dodaje opcjonalna integracje z `ultralytics` YOLO:
+
+- `PoleDetector` dziala w trybach `mock` oraz `yolo`,
+- `ultralytics.YOLO` jest importowane tylko w trybie `yolo`,
+- jesli `models/pole_detector.pt` istnieje, aplikacja probuje uzyc tego modelu,
+- jesli modelu brakuje, aplikacja probuje uzyc `yolo11n.pt` jako modelu testowego,
+- jesli YOLO albo model nie moga zostac zaladowane, aplikacja przechodzi do trybu `mock`,
+- surowe detekcje sa zapisywane do `data/output/detections_raw.csv`,
+- raport HTML pokazuje tryb detektora, uzyty model, liczbe detekcji YOLO i ostrzezenia.
+
+`yolo11n.pt` jest generycznym modelem COCO. Nie zna klas specjalistycznych takich jak slupy energetyczne, `telecom_box` albo `support_stay`. Uzywaj go tylko do sprawdzenia, czy pipeline inferencji dziala technicznie.
+
 ## Wymagania
 
 - Windows 10/11,
@@ -80,6 +94,7 @@ Wyniki zostana zapisane do `data/output/`:
 - `network_segments.geojson`,
 - `poles.csv`,
 - `network_segments.csv`,
+- `detections_raw.csv`,
 - `report.html`,
 - `annotated/*.png`.
 
@@ -116,6 +131,85 @@ Albo:
 py -3 -m pytest
 ```
 
+## Tryb mock
+
+W `config.yaml` ustaw:
+
+```yaml
+detector_mode: mock
+confidence_threshold: 0.5
+max_segment_distance_m: 70
+input_images_dir: data/images
+metadata_path: data/metadata.csv
+output_dir: data/output
+model_path: models/pole_detector.pt
+yolo_model_path: models/pole_detector.pt
+yolo_fallback_model: yolo11n.pt
+yolo_allowed_classes:
+  - pole
+  - double_pole
+  - a_frame_pole
+  - street_lamp
+  - telecom_box
+  - cable_loop
+  - support_stay
+  - pole_number_plate
+  - house_number
+  - transformer
+  - overhead_wire
+  - fiber_cable
+```
+
+Uruchom:
+
+```powershell
+python -m app.core.pipeline
+```
+
+## Tryb yolo
+
+Zainstaluj zaleznosci:
+
+```powershell
+python -m pip install -r requirements.txt
+```
+
+Umiesc wlasny wytrenowany model tutaj:
+
+```text
+models/pole_detector.pt
+```
+
+Nastepnie ustaw w `config.yaml`:
+
+```yaml
+detector_mode: yolo
+confidence_threshold: 0.5
+max_segment_distance_m: 70
+input_images_dir: data/images
+metadata_path: data/metadata.csv
+output_dir: data/output
+model_path: models/pole_detector.pt
+yolo_model_path: models/pole_detector.pt
+yolo_fallback_model: yolo11n.pt
+yolo_allowed_classes:
+  - pole
+  - double_pole
+  - a_frame_pole
+  - street_lamp
+  - telecom_box
+  - cable_loop
+  - support_stay
+  - pole_number_plate
+  - house_number
+  - transformer
+  - overhead_wire
+  - fiber_cable
+```
+
+Jesli `models/pole_detector.pt` nie istnieje, aplikacja sprobuje uzyc `yolo11n.pt`. To jest tylko model testowy COCO, nie profesjonalny detektor slupow.
+Jesli `yolo11n.pt` nie jest dostepny lokalnie, biblioteka Ultralytics moze probowac go pobrac; w srodowisku offline lub bez `ultralytics` aplikacja zapisze ostrzezenie i przejdzie do mock.
+
 ## config.yaml
 
 Przykladowy plik konfiguracyjny:
@@ -128,6 +222,21 @@ input_images_dir: data/images
 metadata_path: data/metadata.csv
 output_dir: data/output
 model_path: models/pole_detector.pt
+yolo_model_path: models/pole_detector.pt
+yolo_fallback_model: yolo11n.pt
+yolo_allowed_classes:
+  - pole
+  - double_pole
+  - a_frame_pole
+  - street_lamp
+  - telecom_box
+  - cable_loop
+  - support_stay
+  - pole_number_plate
+  - house_number
+  - transformer
+  - overhead_wire
+  - fiber_cable
 ```
 
 Opis pol:
@@ -139,6 +248,9 @@ Opis pol:
 - `metadata_path` - sciezka do CSV z lokalizacjami GPS.
 - `output_dir` - folder wynikow.
 - `model_path` - przyszla sciezka do modelu YOLO.
+- `yolo_model_path` - sciezka do wlasnego modelu YOLO.
+- `yolo_fallback_model` - testowy model awaryjny, domyslnie `yolo11n.pt`.
+- `yolo_allowed_classes` - klasy akceptowane dla wlasnego modelu slupow.
 
 ## metadata.csv
 

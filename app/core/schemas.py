@@ -53,10 +53,22 @@ class DetectionResult:
     bbox_y1: int
     bbox_x2: int
     bbox_y2: int
+    class_id: int | None = None
+    model_path: str | None = None
+    source: Literal["mock", "yolo"] = "mock"
 
     @property
     def bbox(self) -> BBox:
         return (self.bbox_x1, self.bbox_y1, self.bbox_x2, self.bbox_y2)
+
+
+@dataclass
+class DetectorRunInfo:
+    detector_mode_requested: str
+    detector_mode_used: str
+    model_path_used: str | None
+    number_of_yolo_detections: int
+    warnings: list[str]
 
 
 @dataclass
@@ -108,6 +120,7 @@ class AnalysisRunResult:
     metadata_rows: int = 0
     missing_images_count: int = 0
     annotated_images: list[Path] | None = None
+    detector_info: DetectorRunInfo | None = None
 
     def summary(self) -> dict[str, int | float]:
         total_length = round(sum(segment.distance_m for segment in self.segments), 2)
@@ -125,6 +138,7 @@ class AnalysisRunResult:
             "segments": len(self.segments),
             "annotated_images": len(self.annotated_images or []),
             "total_route_length_m": total_length,
+            "number_of_yolo_detections": self.detector_info.number_of_yolo_detections if self.detector_info else 0,
         }
 
     def to_api_response(self) -> dict:
@@ -133,4 +147,5 @@ class AnalysisRunResult:
             "warnings": self.warnings,
             "validation_errors": [issue.format() for issue in self.validation_errors],
             "output_files": {name: str(path) for name, path in self.output_files.items()},
+            "detector": self.detector_info.__dict__ if self.detector_info else None,
         }

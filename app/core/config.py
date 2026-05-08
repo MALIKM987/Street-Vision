@@ -31,13 +31,29 @@ def load_config_file(path: Path = CONFIG_PATH) -> dict[str, Any]:
         return {}
 
     config: dict[str, Any] = {}
+    current_list_key: str | None = None
     for raw_line in path.read_text(encoding="utf-8").splitlines():
-        line = raw_line.strip()
-        if not line or line.startswith("#") or ":" not in line:
+        stripped_line = raw_line.strip()
+        if not stripped_line or stripped_line.startswith("#"):
             continue
 
-        key, value = line.split(":", 1)
-        config[key.strip()] = _parse_scalar(value)
+        if stripped_line.startswith("-") and current_list_key:
+            config[current_list_key].append(_parse_scalar(stripped_line[1:].strip()))
+            continue
+
+        if ":" not in stripped_line:
+            current_list_key = None
+            continue
+
+        key, value = stripped_line.split(":", 1)
+        key = key.strip()
+        value = value.strip()
+        if value:
+            config[key] = _parse_scalar(value)
+            current_list_key = None
+        else:
+            config[key] = []
+            current_list_key = key
 
     return config
 
@@ -52,6 +68,22 @@ def _resolve_path(value: str | Path) -> Path:
 config_values = load_config_file()
 
 
+DEFAULT_YOLO_ALLOWED_CLASSES = [
+    "pole",
+    "double_pole",
+    "a_frame_pole",
+    "street_lamp",
+    "telecom_box",
+    "cable_loop",
+    "support_stay",
+    "pole_number_plate",
+    "house_number",
+    "transformer",
+    "overhead_wire",
+    "fiber_cable",
+]
+
+
 @dataclass(frozen=True)
 class Settings:
     project_name: str = "Street Vision GIS/AI MVP"
@@ -64,6 +96,11 @@ class Settings:
     models_dir: Path = BASE_DIR / "models"
     metadata_csv: Path = _resolve_path(os.getenv("METADATA_PATH", config_values.get("metadata_path", "data/metadata.csv")))
     model_path: Path = _resolve_path(os.getenv("MODEL_PATH", config_values.get("model_path", "models/pole_detector.pt")))
+    yolo_model_path: Path = _resolve_path(
+        os.getenv("YOLO_MODEL_PATH", config_values.get("yolo_model_path", config_values.get("model_path", "models/pole_detector.pt")))
+    )
+    yolo_fallback_model: str = os.getenv("YOLO_FALLBACK_MODEL", str(config_values.get("yolo_fallback_model", "yolo11n.pt")))
+    yolo_allowed_classes: tuple[str, ...] = tuple(config_values.get("yolo_allowed_classes", DEFAULT_YOLO_ALLOWED_CLASSES))
     detector_mode: str = os.getenv("DETECTOR_MODE", str(config_values.get("detector_mode", "mock")))
     confidence_threshold: float = float(os.getenv("CONFIDENCE_THRESHOLD", str(config_values.get("confidence_threshold", 0.5))))
     max_segment_distance_m: float = float(

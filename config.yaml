@@ -5,3 +5,18 @@ input_images_dir: data/images
 metadata_path: data/metadata.csv
 output_dir: data/output
 model_path: models/pole_detector.pt
+yolo_model_path: models/pole_detector.pt
+yolo_fallback_model: yolo11n.pt
+yolo_allowed_classes:
+  - pole
+  - double_pole
+  - a_frame_pole
+  - street_lamp
+  - telecom_box
+  - cable_loop
+  - support_stay
+  - pole_number_plate
+  - house_number
+  - transformer
+  - overhead_wire
+  - fiber_cable
