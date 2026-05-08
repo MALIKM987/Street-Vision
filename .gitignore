@@ -2,3 +2,5 @@
 __pycache__/
 *.pyc
 .pytest_cache/
+pytest-cache-files-*/
+data/output/pytest-tmp*/
