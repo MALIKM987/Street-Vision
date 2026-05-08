@@ -5,8 +5,10 @@ input_images_dir: data/images
 metadata_path: data/metadata.csv
 output_dir: data/output
 model_path: models/pole_detector.pt
+
 yolo_model_path: models/pole_detector.pt
 yolo_fallback_model: yolo11n.pt
+
 yolo_allowed_classes:
   - pole
   - double_pole
@@ -20,6 +22,7 @@ yolo_allowed_classes:
   - transformer
   - overhead_wire
   - fiber_cable
+
 dataset:
   raw_dir: dataset/raw
   processed_dir: dataset/processed
@@ -28,6 +31,7 @@ dataset:
   test_ratio: 0.1
   image_size: 1280
   random_seed: 42
+
 data_sources:
   mapillary:
     enabled: true
