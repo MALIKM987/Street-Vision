@@ -5,6 +5,10 @@ from fastapi.responses import FileResponse
 
 from app.core.config import settings
 from app.core.pipeline import AnalysisPipeline
+from app.dataset.dataset_builder import DatasetBuilder
+from app.dataset.dataset_splitter import DatasetSplitter
+from app.dataset.dataset_validator import DatasetValidator
+from app.dataset.yolo_exporter import YoloExporter
 
 
 router = APIRouter()
@@ -68,3 +72,53 @@ def download_network_segments_geojson() -> FileResponse:
     if not path.exists():
         raise HTTPException(status_code=404, detail="Run analysis first.")
     return FileResponse(path, media_type="application/geo+json", filename=path.name)
+
+
+@router.post("/dataset/build")
+def build_dataset() -> dict:
+    result = DatasetBuilder().build()
+    dataset_yaml = YoloExporter().export_dataset_yaml()
+    return {
+        "build": result.to_dict(),
+        "dataset_yaml": str(dataset_yaml),
+    }
+
+
+@router.post("/dataset/split")
+def split_dataset() -> dict:
+    result = DatasetSplitter().split()
+    dataset_yaml = YoloExporter().export_dataset_yaml()
+    validation = DatasetValidator().validate()
+    return {
+        "split": result.to_dict(),
+        "dataset_yaml": str(dataset_yaml),
+        "validation": validation.to_dict(),
+    }
+
+
+@router.get("/dataset/status")
+def dataset_status() -> dict:
+    validation_report = settings.dataset_dir / "validation_report.json"
+    dataset_yaml = settings.dataset_dir / "dataset.yaml"
+
+    split_counts = {}
+    for split_name in ("train", "val", "test"):
+        image_dir = settings.dataset_images_dir / split_name
+        label_dir = settings.dataset_labels_dir / split_name
+        split_counts[split_name] = {
+            "images": len([path for path in image_dir.iterdir() if path.is_file()]) if image_dir.exists() else 0,
+            "labels": len([path for path in label_dir.iterdir() if path.is_file()]) if label_dir.exists() else 0,
+        }
+
+    return {
+        "dataset_dir": str(settings.dataset_dir),
+        "dataset_yaml_exists": dataset_yaml.exists(),
+        "validation_report_exists": validation_report.exists(),
+        "split_counts": split_counts,
+    }
+
+
+@router.get("/dataset/validation-report")
+def dataset_validation_report() -> FileResponse:
+    result = DatasetValidator().validate()
+    return FileResponse(result.report_path, media_type="application/json", filename=result.report_path.name)

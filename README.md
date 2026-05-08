@@ -116,6 +116,10 @@ Najwazniejsze endpointy:
 - `POST /analysis/folder`
 - `GET /results/poles.geojson`
 - `GET /results/network_segments.geojson`
+- `POST /dataset/build`
+- `POST /dataset/split`
+- `GET /dataset/status`
+- `GET /dataset/validation-report`
 
 ## Testy
 
@@ -130,6 +134,60 @@ Albo:
 ```powershell
 py -3 -m pytest
 ```
+
+## Dataset preparation
+
+Etap 4 przygotowuje dataset YOLO do przyszlego trenowania wlasnego modelu. Nie uruchamia treningu i nie pobiera danych z internetu.
+
+Struktura:
+
+```text
+dataset/
+├── raw/
+├── processed/
+├── images/
+│   ├── train/
+│   ├── val/
+│   └── test/
+├── labels/
+│   ├── train/
+│   ├── val/
+│   └── test/
+├── exports/
+└── previews/
+```
+
+Komendy:
+
+```powershell
+python -m app.dataset.dataset_builder
+python -m app.dataset.dataset_splitter
+python -m app.dataset.yolo_exporter
+python -m app.dataset.dataset_validator
+```
+
+Wyniki:
+
+- `dataset/dataset.yaml`
+- `dataset/validation_report.json`
+- `dataset/exports/build_report.json`
+- `dataset/exports/split_report.json`
+- `dataset/exports/dataset_report.html`
+
+Format labela YOLO TXT:
+
+```text
+class_id x_center y_center width height
+```
+
+Przyklad:
+
+```text
+0 0.512000 0.486000 0.120000 0.640000
+4 0.430000 0.610000 0.080000 0.120000
+```
+
+Wartosci bbox sa znormalizowane do `0..1`. Klasy sa opisane w `dataset/dataset.yaml` oraz w [docs/stage_4.md](docs/stage_4.md).
 
 ## Tryb mock
 
@@ -158,6 +216,14 @@ yolo_allowed_classes:
   - transformer
   - overhead_wire
   - fiber_cable
+dataset:
+  raw_dir: dataset/raw
+  processed_dir: dataset/processed
+  train_ratio: 0.7
+  val_ratio: 0.2
+  test_ratio: 0.1
+  image_size: 1280
+  random_seed: 42
 ```
 
 Uruchom:
@@ -251,6 +317,11 @@ Opis pol:
 - `yolo_model_path` - sciezka do wlasnego modelu YOLO.
 - `yolo_fallback_model` - testowy model awaryjny, domyslnie `yolo11n.pt`.
 - `yolo_allowed_classes` - klasy akceptowane dla wlasnego modelu slupow.
+- `dataset.raw_dir` - kopie oryginalnych obrazow.
+- `dataset.processed_dir` - obrazy przygotowane do anotacji.
+- `dataset.train_ratio`, `dataset.val_ratio`, `dataset.test_ratio` - podzial datasetu.
+- `dataset.image_size` - maksymalny rozmiar boku obrazu w `processed`.
+- `dataset.random_seed` - seed powtarzalnego splitu.
 
 ## metadata.csv
 

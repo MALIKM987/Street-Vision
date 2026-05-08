@@ -1,0 +1,55 @@
+{
+  "image_count": 3,
+  "label_count": 0,
+  "split_counts": {
+    "train": {
+      "images": 2,
+      "labels": 0
+    },
+    "val": {
+      "images": 1,
+      "labels": 0
+    },
+    "test": {
+      "images": 0,
+      "labels": 0
+    }
+  },
+  "errors": [],
+  "warnings": [
+    {
+      "severity": "warning",
+      "code": "image_without_label",
+      "message": "Image has no matching YOLO label in split 'train'.",
+      "path": "C:\\Projekty-MM\\Street Vision\\dataset\\images\\train\\sample_pole_001_abaecfb556.png"
+    },
+    {
+      "severity": "warning",
+      "code": "image_without_label",
+      "message": "Image has no matching YOLO label in split 'train'.",
+      "path": "C:\\Projekty-MM\\Street Vision\\dataset\\images\\train\\sample_pole_002_13a6914c84.png"
+    },
+    {
+      "severity": "warning",
+      "code": "image_without_label",
+      "message": "Image has no matching YOLO label in split 'val'.",
+      "path": "C:\\Projekty-MM\\Street Vision\\dataset\\images\\val\\sample_pole_003_5139cf2225.png"
+    }
+  ],
+  "report_path": "C:\\Projekty-MM\\Street Vision\\dataset\\validation_report.json",
+  "html_report_path": "C:\\Projekty-MM\\Street Vision\\dataset\\exports\\dataset_report.html",
+  "classes": {
+    "0": "pole",
+    "1": "double_pole",
+    "2": "a_frame_pole",
+    "3": "street_lamp",
+    "4": "telecom_box",
+    "5": "cable_loop",
+    "6": "support_stay",
+    "7": "pole_number_plate",
+    "8": "house_number",
+    "9": "transformer",
+    "10": "overhead_wire",
+    "11": "fiber_cable"
+  }
+}

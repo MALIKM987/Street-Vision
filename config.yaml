@@ -20,3 +20,11 @@ yolo_allowed_classes:
   - transformer
   - overhead_wire
   - fiber_cable
+dataset:
+  raw_dir: dataset/raw
+  processed_dir: dataset/processed
+  train_ratio: 0.7
+  val_ratio: 0.2
+  test_ratio: 0.1
+  image_size: 1280
+  random_seed: 42

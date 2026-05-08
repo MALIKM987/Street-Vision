@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <title>Street Vision - dataset report</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; color: #1f2933; }
+    table { border-collapse: collapse; margin-bottom: 20px; }
+    th, td { border: 1px solid #d9e2ec; padding: 8px 12px; text-align: left; }
+    th { background: #f0f4f8; }
+    .thumbs { display: flex; gap: 12px; flex-wrap: wrap; }
+    .thumbs img { width: 180px; border: 1px solid #d9e2ec; }
+  </style>
+</head>
+<body>
+  <h1>Dataset preparation report</h1>
+  <table>
+    <tr><th>Metryka</th><th>Wartosc</th></tr>
+    <tr><td>Liczba obrazow</td><td>3</td></tr>
+    <tr><td>Liczba labeli</td><td>0</td></tr>
+    <tr><td>Liczba bledow</td><td>0</td></tr>
+    <tr><td>Liczba ostrzezen</td><td>3</td></tr>
+  </table>
+  <h2>Train / val / test</h2>
+  <table><tr><th>Split</th><th>Obrazy</th><th>Labele</th></tr><tr><td>train</td><td>2</td><td>0</td></tr><tr><td>val</td><td>1</td><td>0</td></tr><tr><td>test</td><td>0</td><td>0</td></tr></table>
+  <h2>Klasy datasetu</h2>
+  <ol><li>0: pole</li><li>1: double_pole</li><li>2: a_frame_pole</li><li>3: street_lamp</li><li>4: telecom_box</li><li>5: cable_loop</li><li>6: support_stay</li><li>7: pole_number_plate</li><li>8: house_number</li><li>9: transformer</li><li>10: overhead_wire</li><li>11: fiber_cable</li></ol>
+  <h2>Bledy i ostrzezenia</h2>
+  <table><tr><th>Typ</th><th>Kod</th><th>Opis</th><th>Plik</th></tr><tr><td>warning</td><td>image_without_label</td><td>Image has no matching YOLO label in split &#x27;train&#x27;.</td><td>C:\Projekty-MM\Street Vision\dataset\images\train\sample_pole_001_abaecfb556.png</td></tr><tr><td>warning</td><td>image_without_label</td><td>Image has no matching YOLO label in split &#x27;train&#x27;.</td><td>C:\Projekty-MM\Street Vision\dataset\images\train\sample_pole_002_13a6914c84.png</td></tr><tr><td>warning</td><td>image_without_label</td><td>Image has no matching YOLO label in split &#x27;val&#x27;.</td><td>C:\Projekty-MM\Street Vision\dataset\images\val\sample_pole_003_5139cf2225.png</td></tr></table>
+  <h2>Przykladowe miniaturki</h2>
+  <div class="thumbs"><a href="../previews/.gitkeep"><img src="../previews/.gitkeep" alt=".gitkeep"></a><a href="../previews/sample_pole_001_abaecfb556_preview.jpg"><img src="../previews/sample_pole_001_abaecfb556_preview.jpg" alt="sample_pole_001_abaecfb556_preview.jpg"></a><a href="../previews/sample_pole_002_13a6914c84_preview.jpg"><img src="../previews/sample_pole_002_13a6914c84_preview.jpg" alt="sample_pole_002_13a6914c84_preview.jpg"></a><a href="../previews/sample_pole_003_5139cf2225_preview.jpg"><img src="../previews/sample_pole_003_5139cf2225_preview.jpg" alt="sample_pole_003_5139cf2225_preview.jpg"></a></div>
+</body>
+</html>

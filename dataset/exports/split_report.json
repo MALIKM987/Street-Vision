@@ -1,0 +1,23 @@
+{
+  "seed": 42,
+  "ratios": {
+    "train": 0.7,
+    "val": 0.2,
+    "test": 0.1
+  },
+  "splits": {
+    "train": [
+      "sample_pole_002_13a6914c84.png",
+      "sample_pole_001_abaecfb556.png"
+    ],
+    "val": [
+      "sample_pole_003_5139cf2225.png"
+    ],
+    "test": []
+  },
+  "missing_labels": [
+    "sample_pole_002_13a6914c84.png",
+    "sample_pole_001_abaecfb556.png",
+    "sample_pole_003_5139cf2225.png"
+  ]
+}

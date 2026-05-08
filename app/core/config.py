@@ -30,30 +30,47 @@ def load_config_file(path: Path = CONFIG_PATH) -> dict[str, Any]:
     if not path.exists():
         return {}
 
-    config: dict[str, Any] = {}
-    current_list_key: str | None = None
-    for raw_line in path.read_text(encoding="utf-8").splitlines():
-        stripped_line = raw_line.strip()
-        if not stripped_line or stripped_line.startswith("#"):
-            continue
+    meaningful_lines = [
+        raw_line
+        for raw_line in path.read_text(encoding="utf-8").splitlines()
+        if raw_line.strip() and not raw_line.strip().startswith("#")
+    ]
 
-        if stripped_line.startswith("-") and current_list_key:
-            config[current_list_key].append(_parse_scalar(stripped_line[1:].strip()))
+    config: dict[str, Any] = {}
+    current_top_key: str | None = None
+
+    for index, raw_line in enumerate(meaningful_lines):
+        indent = len(raw_line) - len(raw_line.lstrip(" "))
+        stripped_line = raw_line.strip()
+
+        if stripped_line.startswith("-") and current_top_key:
+            target = config.get(current_top_key)
+            if not isinstance(target, list):
+                target = []
+                config[current_top_key] = target
+            target.append(_parse_scalar(stripped_line[1:].strip()))
             continue
 
         if ":" not in stripped_line:
-            current_list_key = None
             continue
 
         key, value = stripped_line.split(":", 1)
         key = key.strip()
         value = value.strip()
-        if value:
-            config[key] = _parse_scalar(value)
-            current_list_key = None
-        else:
-            config[key] = []
-            current_list_key = key
+
+        if indent == 0:
+            if value:
+                config[key] = _parse_scalar(value)
+                current_top_key = key
+                continue
+
+            next_line = meaningful_lines[index + 1].strip() if index + 1 < len(meaningful_lines) else ""
+            config[key] = [] if next_line.startswith("-") else {}
+            current_top_key = key
+            continue
+
+        if current_top_key and isinstance(config.get(current_top_key), dict):
+            config[current_top_key][key] = _parse_scalar(value)
 
     return config
 
@@ -83,6 +100,10 @@ DEFAULT_YOLO_ALLOWED_CLASSES = [
     "fiber_cable",
 ]
 
+dataset_config = config_values.get("dataset", {})
+if not isinstance(dataset_config, dict):
+    dataset_config = {}
+
 
 @dataclass(frozen=True)
 class Settings:
@@ -94,6 +115,20 @@ class Settings:
     gis_dir: Path = BASE_DIR / "data" / "gis"
     output_dir: Path = _resolve_path(os.getenv("OUTPUT_DIR", config_values.get("output_dir", "data/output")))
     models_dir: Path = BASE_DIR / "models"
+    dataset_dir: Path = BASE_DIR / "dataset"
+    dataset_raw_dir: Path = _resolve_path(os.getenv("DATASET_RAW_DIR", dataset_config.get("raw_dir", "dataset/raw")))
+    dataset_processed_dir: Path = _resolve_path(
+        os.getenv("DATASET_PROCESSED_DIR", dataset_config.get("processed_dir", "dataset/processed"))
+    )
+    dataset_exports_dir: Path = BASE_DIR / "dataset" / "exports"
+    dataset_previews_dir: Path = BASE_DIR / "dataset" / "previews"
+    dataset_images_dir: Path = BASE_DIR / "dataset" / "images"
+    dataset_labels_dir: Path = BASE_DIR / "dataset" / "labels"
+    dataset_train_ratio: float = float(os.getenv("DATASET_TRAIN_RATIO", str(dataset_config.get("train_ratio", 0.7))))
+    dataset_val_ratio: float = float(os.getenv("DATASET_VAL_RATIO", str(dataset_config.get("val_ratio", 0.2))))
+    dataset_test_ratio: float = float(os.getenv("DATASET_TEST_RATIO", str(dataset_config.get("test_ratio", 0.1))))
+    dataset_image_size: int = int(os.getenv("DATASET_IMAGE_SIZE", str(dataset_config.get("image_size", 1280))))
+    dataset_random_seed: int = int(os.getenv("DATASET_RANDOM_SEED", str(dataset_config.get("random_seed", 42))))
     metadata_csv: Path = _resolve_path(os.getenv("METADATA_PATH", config_values.get("metadata_path", "data/metadata.csv")))
     model_path: Path = _resolve_path(os.getenv("MODEL_PATH", config_values.get("model_path", "models/pole_detector.pt")))
     yolo_model_path: Path = _resolve_path(

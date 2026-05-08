@@ -1,0 +1,23 @@
+{
+  "source_images": [
+    "C:\\Projekty-MM\\Street Vision\\data\\images\\sample_pole_001.png",
+    "C:\\Projekty-MM\\Street Vision\\data\\images\\sample_pole_002.png",
+    "C:\\Projekty-MM\\Street Vision\\data\\images\\sample_pole_003.png"
+  ],
+  "raw_images": [
+    "C:\\Projekty-MM\\Street Vision\\dataset\\raw\\sample_pole_001_abaecfb556.png",
+    "C:\\Projekty-MM\\Street Vision\\dataset\\raw\\sample_pole_002_13a6914c84.png",
+    "C:\\Projekty-MM\\Street Vision\\dataset\\raw\\sample_pole_003_5139cf2225.png"
+  ],
+  "processed_images": [
+    "C:\\Projekty-MM\\Street Vision\\dataset\\processed\\sample_pole_001_abaecfb556.png",
+    "C:\\Projekty-MM\\Street Vision\\dataset\\processed\\sample_pole_002_13a6914c84.png",
+    "C:\\Projekty-MM\\Street Vision\\dataset\\processed\\sample_pole_003_5139cf2225.png"
+  ],
+  "previews": [
+    "C:\\Projekty-MM\\Street Vision\\dataset\\previews\\sample_pole_001_abaecfb556_preview.jpg",
+    "C:\\Projekty-MM\\Street Vision\\dataset\\previews\\sample_pole_002_13a6914c84_preview.jpg",
+    "C:\\Projekty-MM\\Street Vision\\dataset\\previews\\sample_pole_003_5139cf2225_preview.jpg"
+  ],
+  "warnings": []
+}
