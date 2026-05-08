@@ -28,3 +28,17 @@ dataset:
   test_ratio: 0.1
   image_size: 1280
   random_seed: 42
+data_sources:
+  mapillary:
+    enabled: true
+    access_token_env: MAPILLARY_ACCESS_TOKEN
+    bbox: "21.00,52.22,21.03,52.24"
+    limit: 50
+    output_dir: dataset/raw/mapillary
+  kartaview:
+    enabled: false
+    lat: 52.2297
+    lon: 21.0122
+    radius_m: 500
+    limit: 50
+    output_dir: dataset/raw/kartaview

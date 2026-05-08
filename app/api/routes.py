@@ -5,6 +5,8 @@ from fastapi.responses import FileResponse
 
 from app.core.config import settings
 from app.core.pipeline import AnalysisPipeline
+from app.data_sources.kartaview_client import KartaViewClient
+from app.data_sources.mapillary_client import MapillaryClient
 from app.dataset.dataset_builder import DatasetBuilder
 from app.dataset.dataset_splitter import DatasetSplitter
 from app.dataset.dataset_validator import DatasetValidator
@@ -122,3 +124,40 @@ def dataset_status() -> dict:
 def dataset_validation_report() -> FileResponse:
     result = DatasetValidator().validate()
     return FileResponse(result.report_path, media_type="application/json", filename=result.report_path.name)
+
+
+@router.post("/data-sources/mapillary/import")
+def import_mapillary_images() -> dict:
+    result = MapillaryClient().import_images()
+    return result.to_dict()
+
+
+@router.post("/data-sources/kartaview/import")
+def import_kartaview_images() -> dict:
+    result = KartaViewClient().import_images()
+    return result.to_dict()
+
+
+@router.get("/data-sources/imports/status")
+def data_source_import_status() -> dict:
+    imports_dir = settings.imports_dir
+    mapillary_csv = imports_dir / "mapillary_import.csv"
+    kartaview_csv = imports_dir / "kartaview_import.csv"
+
+    return {
+        "imports_dir": str(imports_dir),
+        "mapillary": {
+            "metadata_csv": str(mapillary_csv),
+            "metadata_csv_exists": mapillary_csv.exists(),
+            "image_count": len([path for path in settings.mapillary_output_dir.iterdir() if path.is_file()])
+            if settings.mapillary_output_dir.exists()
+            else 0,
+        },
+        "kartaview": {
+            "metadata_csv": str(kartaview_csv),
+            "metadata_csv_exists": kartaview_csv.exists(),
+            "image_count": len([path for path in settings.kartaview_output_dir.iterdir() if path.is_file()])
+            if settings.kartaview_output_dir.exists()
+            else 0,
+        },
+    }

@@ -1,4 +1,5 @@
 import hashlib
+import argparse
 import json
 import re
 from dataclasses import dataclass
@@ -153,7 +154,20 @@ class DatasetBuilder:
 
 
 def main() -> None:
-    result = DatasetBuilder().build()
+    parser = argparse.ArgumentParser(description="Prepare local images for YOLO annotation.")
+    parser.add_argument("--source-images-dir", default=str(settings.images_dir))
+    parser.add_argument("--raw-dir", default=str(settings.dataset_raw_dir))
+    parser.add_argument("--processed-dir", default=str(settings.dataset_processed_dir))
+    parser.add_argument("--previews-dir", default=str(settings.dataset_previews_dir))
+    parser.add_argument("--no-resize", action="store_true")
+    args = parser.parse_args()
+
+    result = DatasetBuilder(
+        source_images_dir=Path(args.source_images_dir),
+        raw_dir=Path(args.raw_dir),
+        processed_dir=Path(args.processed_dir),
+        previews_dir=Path(args.previews_dir),
+    ).build(resize=not args.no_resize)
     print(json.dumps(result.to_dict(), ensure_ascii=False, indent=2))
 
 

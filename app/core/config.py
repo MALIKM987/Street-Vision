@@ -30,6 +30,16 @@ def load_config_file(path: Path = CONFIG_PATH) -> dict[str, Any]:
     if not path.exists():
         return {}
 
+    try:
+        import yaml
+    except ImportError:
+        yaml = None
+
+    if yaml is not None:
+        loaded = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+        if isinstance(loaded, dict):
+            return loaded
+
     meaningful_lines = [
         raw_line
         for raw_line in path.read_text(encoding="utf-8").splitlines()
@@ -104,6 +114,18 @@ dataset_config = config_values.get("dataset", {})
 if not isinstance(dataset_config, dict):
     dataset_config = {}
 
+data_sources_config = config_values.get("data_sources", {})
+if not isinstance(data_sources_config, dict):
+    data_sources_config = {}
+
+mapillary_config = data_sources_config.get("mapillary", {})
+if not isinstance(mapillary_config, dict):
+    mapillary_config = {}
+
+kartaview_config = data_sources_config.get("kartaview", {})
+if not isinstance(kartaview_config, dict):
+    kartaview_config = {}
+
 
 @dataclass(frozen=True)
 class Settings:
@@ -129,6 +151,22 @@ class Settings:
     dataset_test_ratio: float = float(os.getenv("DATASET_TEST_RATIO", str(dataset_config.get("test_ratio", 0.1))))
     dataset_image_size: int = int(os.getenv("DATASET_IMAGE_SIZE", str(dataset_config.get("image_size", 1280))))
     dataset_random_seed: int = int(os.getenv("DATASET_RANDOM_SEED", str(dataset_config.get("random_seed", 42))))
+    imports_dir: Path = BASE_DIR / "dataset" / "imports"
+    mapillary_enabled: bool = bool(mapillary_config.get("enabled", True))
+    mapillary_access_token_env: str = str(mapillary_config.get("access_token_env", "MAPILLARY_ACCESS_TOKEN"))
+    mapillary_bbox: str = str(mapillary_config.get("bbox", "21.00,52.22,21.03,52.24"))
+    mapillary_limit: int = int(mapillary_config.get("limit", 50))
+    mapillary_output_dir: Path = _resolve_path(mapillary_config.get("output_dir", "dataset/raw/mapillary"))
+    kartaview_enabled: bool = bool(kartaview_config.get("enabled", False))
+    kartaview_api_base_url: str = os.getenv(
+        "KARTAVIEW_API_BASE_URL",
+        str(kartaview_config.get("api_base_url", "https://api.openstreetcam.org/2.0")),
+    )
+    kartaview_lat: float = float(kartaview_config.get("lat", 52.2297))
+    kartaview_lon: float = float(kartaview_config.get("lon", 21.0122))
+    kartaview_radius_m: int = int(kartaview_config.get("radius_m", 500))
+    kartaview_limit: int = int(kartaview_config.get("limit", 50))
+    kartaview_output_dir: Path = _resolve_path(kartaview_config.get("output_dir", "dataset/raw/kartaview"))
     metadata_csv: Path = _resolve_path(os.getenv("METADATA_PATH", config_values.get("metadata_path", "data/metadata.csv")))
     model_path: Path = _resolve_path(os.getenv("MODEL_PATH", config_values.get("model_path", "models/pole_detector.pt")))
     yolo_model_path: Path = _resolve_path(

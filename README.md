@@ -120,6 +120,9 @@ Najwazniejsze endpointy:
 - `POST /dataset/split`
 - `GET /dataset/status`
 - `GET /dataset/validation-report`
+- `POST /data-sources/mapillary/import`
+- `POST /data-sources/kartaview/import`
+- `GET /data-sources/imports/status`
 
 ## Testy
 
@@ -189,6 +192,46 @@ Przyklad:
 
 Wartosci bbox sa znormalizowane do `0..1`. Klasy sa opisane w `dataset/dataset.yaml` oraz w [docs/stage_4.md](docs/stage_4.md).
 
+## Street image import
+
+Etap 4B dodaje import zdjec ulicznych do datasetu z Mapillary oraz opcjonalnie KartaView.
+
+Nie uzywaj Google Maps ani Google Street View. Nie zapisuj tokenow w repozytorium i nie commituj folderu `dataset/`.
+
+Przyklad `.env`:
+
+```text
+MAPILLARY_ACCESS_TOKEN=
+KARTAVIEW_API_BASE_URL=https://api.openstreetcam.org/2.0
+```
+
+Import Mapillary:
+
+```powershell
+python -m app.data_sources.mapillary_client
+```
+
+Import KartaView:
+
+```powershell
+python -m app.data_sources.kartaview_client
+```
+
+Po imporcie przygotuj obrazy do anotacji:
+
+```powershell
+python -m app.dataset.dataset_builder --source-images-dir dataset/raw/mapillary
+```
+
+Wyniki importu:
+
+- `dataset/raw/mapillary/`
+- `dataset/raw/kartaview/`
+- `dataset/imports/mapillary_import.csv`
+- `dataset/imports/kartaview_import.csv`
+
+Szczegoly: [docs/stage_4b_data_import.md](docs/stage_4b_data_import.md).
+
 ## Tryb mock
 
 W `config.yaml` ustaw:
@@ -224,6 +267,20 @@ dataset:
   test_ratio: 0.1
   image_size: 1280
   random_seed: 42
+data_sources:
+  mapillary:
+    enabled: true
+    access_token_env: MAPILLARY_ACCESS_TOKEN
+    bbox: "21.00,52.22,21.03,52.24"
+    limit: 50
+    output_dir: dataset/raw/mapillary
+  kartaview:
+    enabled: false
+    lat: 52.2297
+    lon: 21.0122
+    radius_m: 500
+    limit: 50
+    output_dir: dataset/raw/kartaview
 ```
 
 Uruchom:
@@ -322,6 +379,10 @@ Opis pol:
 - `dataset.train_ratio`, `dataset.val_ratio`, `dataset.test_ratio` - podzial datasetu.
 - `dataset.image_size` - maksymalny rozmiar boku obrazu w `processed`.
 - `dataset.random_seed` - seed powtarzalnego splitu.
+- `data_sources.mapillary.access_token_env` - nazwa zmiennej ENV z tokenem Mapillary.
+- `data_sources.mapillary.bbox` - obszar importu w formacie `min_lon,min_lat,max_lon,max_lat`.
+- `data_sources.mapillary.output_dir` - lokalny folder pobranych zdjec Mapillary.
+- `data_sources.kartaview.enabled` - wlacza lub wylacza opcjonalny import KartaView.
 
 ## metadata.csv
 
